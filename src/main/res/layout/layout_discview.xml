@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.achillesl.neteasedisc.DiscView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/ivDisc"
+        android:id="@+id/ivDiscBlackgound"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
-        tools:src="@drawable/play_disc"/>
+        />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vpDiscContain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:fadingEdge="none"/>
 
     <ImageView
         android:id="@+id/ivNeedle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="180dp"
-        android:src="@drawable/play_needle"/>
+        android:src="@drawable/needle_clip"/>
 
 </com.achillesl.neteasedisc.DiscView>

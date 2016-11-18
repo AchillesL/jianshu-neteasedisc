@@ -1,37 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<com.achillesl.neteasedisc.BackgourndAnimationRelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fm_run_song_bg"
-    android:orientation="vertical"
+    android:fitsSystemWindows="true"
     >
 
-    <TextView
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolBar"
         android:layout_width="match_parent"
-        android:layout_height="120dp"/>
+        android:layout_height="?attr/actionBarSize"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"
+        app:subtitleTextAppearance="@style/netease_toolbar_subtitle"
+        app:titleTextAppearance="@style/netease_toolbar_title"
+        />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_below="@id/toolBar"
+        android:background="#33ffffff"/>
 
     <include
         android:id="@+id/discview"
         layout="@layout/layout_discview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/llPlayOption"
+        android:layout_below="@+id/toolBar"
         />
 
     <LinearLayout
+        android:id="@+id/llPlayOption"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
+        android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="20dp">
 
         <ImageView
-            android:id="@+id/ivPlay"
+            android:id="@+id/ivLast"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/play_fm_btn_play_prs"/>
-    </LinearLayout>
+            android:src="@drawable/ic_last"/>
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/ivPlayOrPause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_play"/>
+
+        <ImageView
+            android:id="@+id/ivNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_next"/>
+    </LinearLayout>
+</com.achillesl.neteasedisc.BackgourndAnimationRelativeLayout>
