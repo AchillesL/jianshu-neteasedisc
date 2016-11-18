@@ -16,11 +16,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".MusicService"
-            android:enabled="true"
-            android:exported="true">
-        </service>
     </application>
 
 </manifest>

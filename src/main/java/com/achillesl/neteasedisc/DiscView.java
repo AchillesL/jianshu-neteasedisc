@@ -13,10 +13,10 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -31,20 +31,48 @@ import java.util.List;
 
 public class DiscView extends RelativeLayout {
 
-    boolean mIsShowingPauseAnimation = false;
     private ImageView mIvNeedle;
-    private ImageView mDiscBlackground;
-    private ObjectAnimator mNeedleAnimator;
-    private ViewPager mVpDiscContain;
+    private ViewPager mVpContain;
     private ViewPagerAdapter mViewPagerAdapter;
+
+    private ObjectAnimator mNeedleAnimator;
+
     private List<View> mDiscLayouts = new ArrayList<>();
     private List<MusicData> mMusicDatas = new ArrayList<>();
     private List<ObjectAnimator> mDiscAnimators = new ArrayList<>();
-    private boolean mIsNeed2StartAfterAnimator = false;
-    private AnimatorStatus animatiorStatus = AnimatorStatus.STOP;
+
+    /*标记ViewPager是否处于偏移的状态*/
+    private boolean mViewPagerIsOffset = false;
+    /*标记唱针复位后，是否需要重新偏移到唱片处*/
+    private boolean mIsNeed2StartPlayAnimator = false;
+
     private MusicStatus musicStatus = MusicStatus.PAUSE;
+    private NeedleAnimatorStatus needleAnimatorStatus = NeedleAnimatorStatus.IN_FAR_END;
+
     private IPlayInfo mIPlayInfo;
+
     private int mScreenWidth, mScreenHeight;
+    private enum NeedleAnimatorStatus {
+        /*移动时：从唱盘往远处移动*/
+        TO_FAR_END,
+        /*移动时：从远处往唱盘移动*/
+        TO_NEAR_END,
+        /*静止时：离开唱盘*/
+        IN_FAR_END,
+        /*静止时：贴近唱盘*/
+        IN_NEAR_END
+
+    }
+    public enum MusicStatus {
+        PLAY, PAUSE
+
+    }
+    public interface IPlayInfo {
+        public void onMusicInfoChanged(String musicName, String musicAuthor);
+        public void onMusicPicChanged(int musicPicRes);
+        public void onPlayStatusChanged(MusicStatus musicStatus);
+
+    }
 
     public DiscView(Context context) {
         this(context, null);
@@ -71,7 +99,7 @@ public class DiscView extends RelativeLayout {
     }
 
     private void initDiscBlackground() {
-        mDiscBlackground = (ImageView) findViewById(R.id.ivDiscBlackgound);
+        ImageView mDiscBlackground = (ImageView) findViewById(R.id.ivDiscBlackgound);
         mDiscBlackground.setImageDrawable(getDiscBlackgroundDrawable());
 
         int marginTop = (int) (DisplayUtils.SCALE_DISC_MARGIN_TOP * mScreenHeight);
@@ -84,22 +112,20 @@ public class DiscView extends RelativeLayout {
 
     private void initViewPager() {
         mViewPagerAdapter = new ViewPagerAdapter();
-        mVpDiscContain = (ViewPager) findViewById(R.id.vpDiscContain);
-        mVpDiscContain.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        mVpDiscContain.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        mVpContain = (ViewPager) findViewById(R.id.vpDiscContain);
+        mVpContain.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        mVpContain.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             int lastPositionOffsetPixels = 0;
 
             @Override
             public void onPageScrolled(int position, float positionOffset, int
                     positionOffsetPixels) {
-                Log.d("onPageScrolled", "position: " + position + " positionOffset: " +
-                        positionOffset + " positionOffsetPixels: " + positionOffsetPixels);
                 //左滑
                 if (lastPositionOffsetPixels > positionOffsetPixels) {
                     if (positionOffset < 0.5) {
                         notifyMusicInfoChanged(position);
                     } else {
-                        notifyMusicInfoChanged(mVpDiscContain.getCurrentItem());
+                        notifyMusicInfoChanged(mVpContain.getCurrentItem());
                     }
                 }
                 //右滑
@@ -121,42 +147,40 @@ public class DiscView extends RelativeLayout {
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                Log.d("onPageScrolled", "state: " + state);
                 doWithAnimatorOnPageScroll(state);
             }
         });
-        mVpDiscContain.setAdapter(mViewPagerAdapter);
+        mVpContain.setAdapter(mViewPagerAdapter);
 
-        RelativeLayout.LayoutParams layoutParams = (LayoutParams) mVpDiscContain.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (LayoutParams) mVpContain.getLayoutParams();
         int marginTop = (int) (DisplayUtils.SCALE_DISC_MARGIN_TOP * mScreenHeight);
         layoutParams.setMargins(0, marginTop, 0, 0);
-        mVpDiscContain.setLayoutParams(layoutParams);
+        mVpContain.setLayoutParams(layoutParams);
     }
 
+    /**
+     * 取消其他页面上的动画，并将图片旋转角度复原
+     * */
     private void resetOtherDiscAnimation(int position) {
         for (int i = 0; i < mDiscLayouts.size(); i++) {
             if (position == i) continue;
-
-            /**
-             * 其他页面的动画再次启动时，应该从初始状态开始。
-             * 因此需要取消动画，并将图片复位。
-             * */
             mDiscAnimators.get(position).cancel();
             ImageView imageView = (ImageView) mDiscLayouts.get(i).findViewById(R.id.ivDisc);
             imageView.setRotation(0);
         }
     }
-
     private void doWithAnimatorOnPageScroll(int state) {
         switch (state) {
             case ViewPager.SCROLL_STATE_IDLE:
             case ViewPager.SCROLL_STATE_SETTLING: {
+                mViewPagerIsOffset = false;
                 if (musicStatus == MusicStatus.PLAY) {
                     playAnimator();
                 }
                 break;
             }
             case ViewPager.SCROLL_STATE_DRAGGING: {
+                mViewPagerIsOffset = true;
                 pauseAnimator();
                 break;
             }
@@ -189,35 +213,46 @@ public class DiscView extends RelativeLayout {
     private void initObjectAnimator() {
         mNeedleAnimator = ObjectAnimator.ofFloat(mIvNeedle, View.ROTATION, DisplayUtils.ROTATION_INIT_NEEDLE, 0);
         mNeedleAnimator.setDuration(500);
-        mNeedleAnimator.setInterpolator(new LinearInterpolator());
+        mNeedleAnimator.setInterpolator(new AccelerateInterpolator());
         mNeedleAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
-
+                /**
+                 * 根据动画开始前NeedleAnimatorStatus的状态，
+                 * 即可得出动画进行时NeedleAnimatorStatus的状态
+                 * */
+                if (needleAnimatorStatus == NeedleAnimatorStatus.IN_FAR_END) {
+                    needleAnimatorStatus = NeedleAnimatorStatus.TO_NEAR_END;
+                } else if (needleAnimatorStatus == NeedleAnimatorStatus.IN_NEAR_END) {
+                    needleAnimatorStatus = NeedleAnimatorStatus.TO_FAR_END;
+                }
             }
 
             @Override
             public void onAnimationEnd(Animator animator) {
-                if (mIsShowingPauseAnimation) mIsShowingPauseAnimation = false;
-                animatiorStatus = (animatiorStatus == AnimatorStatus.PLAY ? AnimatorStatus.STOP :
-                        AnimatorStatus.PLAY);
-                if (animatiorStatus == AnimatorStatus.PLAY) {
-                    int index = mVpDiscContain.getCurrentItem();
+
+                if (needleAnimatorStatus == NeedleAnimatorStatus.TO_NEAR_END) {
+                    needleAnimatorStatus = NeedleAnimatorStatus.IN_NEAR_END;
+                    int index = mVpContain.getCurrentItem();
                     playDiscAnimator(index);
+                } else if (needleAnimatorStatus == NeedleAnimatorStatus.TO_FAR_END) {
+                    needleAnimatorStatus = NeedleAnimatorStatus.IN_FAR_END;
                 }
 
-                /**
-                 * 由于ObjectAnimator的bug，onAnimationEnd被调用时，ObjectAnimator.isRunning仍然返回true。
-                 * 因此加延时处理。
-                 * */
-                if (mIsNeed2StartAfterAnimator) {
-                    mIsNeed2StartAfterAnimator = false;
-                    DiscView.this.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            playAnimator();
-                        }
-                    }, 50);
+                if (mIsNeed2StartPlayAnimator) {
+                    mIsNeed2StartPlayAnimator = false;
+                    /**
+                     * 只有在ViewPager不处于偏移状态时，才开始唱盘旋转动画
+                     * */
+                    if (!mViewPagerIsOffset) {
+                        /*延时处理，有神奇的作用*/
+                        DiscView.this.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                playAnimator();
+                            }
+                        }, 50);
+                    }
                 }
             }
 
@@ -237,16 +272,20 @@ public class DiscView extends RelativeLayout {
         this.mIPlayInfo = listener;
     }
 
+    /*得到唱盘背后半透明的圆形背景*/
     private Drawable getDiscBlackgroundDrawable() {
         int discSize = (int) (mScreenWidth * DisplayUtils.SCALE_DISC_SIZE);
-        Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources
-                (), R
+        Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R
                 .drawable.play_disc_blackground), discSize, discSize, false);
         RoundedBitmapDrawable mRoundDiscDrawable = RoundedBitmapDrawableFactory.create
                 (getResources(), mBitmapDisc);
         return mRoundDiscDrawable;
     }
 
+    /**
+     * 得到唱盘图片
+     * 唱盘图片由空心圆盘及音乐专辑图片“合成”得到
+     * */
     private Drawable getDiscDrawable(int musicPicRes) {
         int discSize = (int) (mScreenWidth * DisplayUtils.SCALE_DISC_SIZE);
         int musicPicSize = (int) (mScreenWidth * DisplayUtils.SCALE_MUSIC_PIC_SIZE);
@@ -286,8 +325,8 @@ public class DiscView extends RelativeLayout {
 
         int i = 0;
         for (MusicData musicData : mMusicDatas) {
-            View discLayout = LayoutInflater.from(getContext()).inflate(R.layout.disc_layout,
-                    mVpDiscContain, false);
+            View discLayout = LayoutInflater.from(getContext()).inflate(R.layout.layout_disc,
+                    mVpContain, false);
 
             ImageView disc = (ImageView) discLayout.findViewById(R.id.ivDisc);
             disc.setImageDrawable(getDiscDrawable(musicData.getMusicPicRes()));
@@ -308,7 +347,6 @@ public class DiscView extends RelativeLayout {
         ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(disc, View.ROTATION, 0, 360);
         objectAnimator.setRepeatCount(ValueAnimator.INFINITE);
         objectAnimator.setDuration(20 * 1000);
-        objectAnimator.setAutoCancel(false);
         objectAnimator.setInterpolator(new LinearInterpolator());
 
         return objectAnimator;
@@ -322,21 +360,24 @@ public class DiscView extends RelativeLayout {
     /*播放动画*/
     private void playAnimator() {
         /*若暂停动画还未结束，则设置标记，等结束后再播放动画*/
-        Log.d("AchillesL", "animatiorStatus: " + animatiorStatus);
-        Log.d("AchillesL", "mNeedleAnimator.isRunning(): " + animatiorStatus);
-        if (animatiorStatus == AnimatorStatus.PLAY && mIsShowingPauseAnimation) {
-            mIsNeed2StartAfterAnimator = true;
-        } else if ((animatiorStatus == AnimatorStatus.STOP) && (!mNeedleAnimator.isRunning())) {
+        if (needleAnimatorStatus == NeedleAnimatorStatus.IN_FAR_END) {
             mNeedleAnimator.start();
+        } else if (needleAnimatorStatus == NeedleAnimatorStatus.TO_FAR_END) {
+            mIsNeed2StartPlayAnimator = true;
         }
     }
 
     /*暂停动画*/
     private void pauseAnimator() {
-        if (animatiorStatus == AnimatorStatus.PLAY) {
-            int index = mVpDiscContain.getCurrentItem();
+        if (needleAnimatorStatus == NeedleAnimatorStatus.IN_NEAR_END) {
+            int index = mVpContain.getCurrentItem();
             pauseDiscAnimatior(index);
-            mIsShowingPauseAnimation = true;
+        } else if (needleAnimatorStatus == NeedleAnimatorStatus.TO_NEAR_END) {
+            mNeedleAnimator.reverse();
+            /**
+             * 若动画在没结束时执行reverse方法，则不会执行监听器的onStart方法，此时需要手动设置
+             * */
+            needleAnimatorStatus = NeedleAnimatorStatus.TO_FAR_END;
         }
     }
 
@@ -399,48 +440,32 @@ public class DiscView extends RelativeLayout {
     }
 
     public void next() {
-        int currentItem = mVpDiscContain.getCurrentItem();
+        int currentItem = mVpContain.getCurrentItem();
         if (currentItem == mMusicDatas.size() - 1) {
             Toast.makeText(getContext(), "已经到达最后一首", Toast.LENGTH_SHORT).show();
         } else {
             selectMusicWithButton();
-            mVpDiscContain.setCurrentItem(currentItem + 1, true);
+            mVpContain.setCurrentItem(currentItem + 1, true);
         }
     }
 
     public void last() {
-        int currentItem = mVpDiscContain.getCurrentItem();
+        int currentItem = mVpContain.getCurrentItem();
         if (currentItem == 0) {
             Toast.makeText(getContext(), "已经到达第一首", Toast.LENGTH_SHORT).show();
         } else {
             selectMusicWithButton();
-            mVpDiscContain.setCurrentItem(currentItem - 1, true);
+            mVpContain.setCurrentItem(currentItem - 1, true);
         }
     }
 
     private void selectMusicWithButton() {
         if (musicStatus == MusicStatus.PLAY) {
-            mIsNeed2StartAfterAnimator = true;
+            mIsNeed2StartPlayAnimator = true;
             pauseAnimator();
         } else if (musicStatus == MusicStatus.PAUSE) {
             play();
         }
-    }
-
-    private enum AnimatorStatus {
-        PLAY, STOP
-    }
-
-    public enum MusicStatus {
-        PLAY, PAUSE
-    }
-
-    public interface IPlayInfo {
-        public void onMusicInfoChanged(String musicName, String musicAuthor);
-
-        public void onMusicPicChanged(int musicPicRes);
-
-        public void onPlayStatusChanged(MusicStatus musicStatus);
     }
 
     class ViewPagerAdapter extends PagerAdapter {
