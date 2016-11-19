@@ -18,7 +18,6 @@ import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -49,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     private TextView mTvMusicDuration,mTvTotalMusicDuration;
     private BackgourndAnimationRelativeLayout mRootLayout;
     public static final int MUSIC_MESSAGE = 0;
+
+    public static final String PARAM_MUSIC_LIST = "PARAM_MUSIC_LIST";
 
     private Handler mMusicHandler = new Handler(){
         @Override
@@ -153,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mMusicDatas.add(musicData3);
 
         Intent intent = new Intent(this, MusicService.class);
-        intent.putExtra("musicList", (Serializable) mMusicDatas);
+        intent.putExtra(PARAM_MUSIC_LIST, (Serializable) mMusicDatas);
         startService(intent);
     }
 
@@ -241,7 +242,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     private void play() {
-        Log.d("MainActivity","play");
         mRootLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -252,7 +252,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     private void pause() {
-        Log.d("MainActivity","pause");
         optMusic(MusicService.ACTION_OPT_MUSIC_PAUSE);
         stopUpdateSeekBarProgree();
     }
@@ -266,7 +265,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     private void next() {
-        Log.d("MainActivity","next");
         mRootLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -279,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     private void last() {
-        Log.d("MainActivity","last");
         mRootLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -315,6 +312,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         mMusicHandler.sendEmptyMessageDelayed(0,1000);
     }
 
+    /*根据时长格式化称时间文本*/
     private String duration2Time(int duration) {
         int min = duration / 1000 / 60;
         int sec = duration / 1000 % 60;
@@ -337,7 +335,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
             String action = intent.getAction();
             if (action.equals(MusicService.ACTION_STATUS_MUSIC_PLAY)) {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_pause);
-                int currentPosition = intent.getIntExtra(MusicService.PARAM_MUSIC_CURRENT_POSITION,0);
+                int currentPosition = intent.getIntExtra(MusicService.PARAM_MUSIC_CURRENT_POSITION, 0);
                 mSeekBar.setProgress(currentPosition);
             } else if (action.equals(MusicService.ACTION_STATUS_MUSIC_PAUSE)) {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_play);

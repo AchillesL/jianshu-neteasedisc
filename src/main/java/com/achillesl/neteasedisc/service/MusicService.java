@@ -5,11 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.achillesl.neteasedisc.activity.MainActivity;
 import com.achillesl.neteasedisc.model.MusicData;
 
 import java.util.ArrayList;
@@ -40,7 +40,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public static final String PARAM_MUSIC_IS_OVER = "PARAM_MUSIC_IS_OVER";
 
     private int mCurrentMusicIndex = 0;
-
     private boolean mIsMusicPause = false;
     private List<MusicData> mMusicDatas = new ArrayList<>();
 
@@ -65,7 +64,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void initMusicDatas(Intent intent) {
-        List<MusicData> musicDatas = (List<MusicData>) intent.getSerializableExtra("musicList");
+        List<MusicData> musicDatas = (List<MusicData>) intent.getSerializableExtra(MainActivity.PARAM_MUSIC_LIST);
         mMusicDatas.addAll(musicDatas);
     }
 

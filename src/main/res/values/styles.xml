@@ -31,7 +31,7 @@
         parent="Widget.AppCompat.SeekBar">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:thumb">@drawable/ic_thumb</item>
+        <item name="android:thumb">@drawable/ic_seekbar_thumb</item>
     </style>
 
 </resources>

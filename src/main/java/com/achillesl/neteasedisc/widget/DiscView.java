@@ -67,7 +67,6 @@ public class DiscView extends RelativeLayout {
         IN_FAR_END,
         /*静止时：贴近唱盘*/
         IN_NEAR_END
-
     }
 
     public enum MusicStatus {
@@ -215,7 +214,7 @@ public class DiscView extends RelativeLayout {
         int marginLeft = (int) (DisplayUtil.SCALE_NEEDLE_MARGIN_LEFT * mScreenWidth);
 
         Bitmap originBitmap = BitmapFactory.decodeResource(getResources(), R.drawable
-                .ic_play_needle);
+                .ic_needle);
         Bitmap bitmap = Bitmap.createScaledBitmap(originBitmap, needleWidth, needleHeight, false);
 
         RelativeLayout.LayoutParams layoutParams = (LayoutParams) mIvNeedle.getLayoutParams();
@@ -299,7 +298,7 @@ public class DiscView extends RelativeLayout {
         int discSize = (int) (mScreenWidth * DisplayUtil.SCALE_DISC_SIZE);
         Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources
                 (), R
-                .drawable.ic_play_disc_blackground), discSize, discSize, false);
+                .drawable.ic_disc_blackground), discSize, discSize, false);
         RoundedBitmapDrawable mRoundDiscDrawable = RoundedBitmapDrawableFactory.create
                 (getResources(), mBitmapDisc);
         return mRoundDiscDrawable;
@@ -315,7 +314,7 @@ public class DiscView extends RelativeLayout {
 
         Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources
                 (), R
-                .drawable.ic_play_disc), discSize, discSize, false);
+                .drawable.ic_disc), discSize, discSize, false);
         Bitmap mBitmapMusicPic = Bitmap.createScaledBitmap(BitmapFactory.decodeResource
                 (getResources(), musicPicRes), musicPicSize, musicPicSize, false);
         RoundedBitmapDrawable mRoundDiscDrawable = RoundedBitmapDrawableFactory.create
