@@ -45,7 +45,7 @@ public class BackgourndAnimationRelativeLayout extends RelativeLayout {
     }
 
     private void initLayerDrawable() {
-        Drawable backgroundDrawable = getContext().getDrawable(R.drawable.fm_run_song_bg);
+        Drawable backgroundDrawable = getContext().getDrawable(R.drawable.ic_blackground);
         Drawable[] drawables = new Drawable[2];
 
         /*初始化时先将前景与背景颜色设为一致*/

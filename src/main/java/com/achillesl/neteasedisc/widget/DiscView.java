@@ -38,19 +38,20 @@ public class DiscView extends RelativeLayout {
     private ImageView mIvNeedle;
     private ViewPager mVpContain;
     private ViewPagerAdapter mViewPagerAdapter;
-
     private ObjectAnimator mNeedleAnimator;
 
     private List<View> mDiscLayouts = new ArrayList<>();
+
     private List<MusicData> mMusicDatas = new ArrayList<>();
     private List<ObjectAnimator> mDiscAnimators = new ArrayList<>();
-
     /*标记ViewPager是否处于偏移的状态*/
     private boolean mViewPagerIsOffset = false;
+
     /*标记唱针复位后，是否需要重新偏移到唱片处*/
     private boolean mIsNeed2StartPlayAnimator = false;
-
     private MusicStatus musicStatus = MusicStatus.PAUSE;
+
+    public static final int DURATION_NEEDLE_ANIAMTOR = 500;
     private NeedleAnimatorStatus needleAnimatorStatus = NeedleAnimatorStatus.IN_FAR_END;
 
     private IPlayInfo mIPlayInfo;
@@ -70,13 +71,17 @@ public class DiscView extends RelativeLayout {
     }
 
     public enum MusicStatus {
-        PLAY, PAUSE,NEXT,LAST
+        PLAY, PAUSE
+    }
+
+    public enum MusicChangedStatus {
+        NEXT,LAST,STOP
     }
 
     public interface IPlayInfo {
         public void onMusicInfoChanged(String musicName, String musicAuthor);
         public void onMusicPicChanged(int musicPicRes);
-        public void onPlayStatusChanged(MusicStatus musicStatus);
+        public void onMusicChanged(MusicChangedStatus musicChangedStatus);
     }
 
     public DiscView(Context context) {
@@ -149,9 +154,9 @@ public class DiscView extends RelativeLayout {
                 resetOtherDiscAnimation(position);
                 notifyMusicPicChanged(position);
                 if (position > currentItem) {
-                    notifyMusicStatusChanged(MusicStatus.NEXT);
+                    notifyMusicStatusChanged(MusicChangedStatus.NEXT);
                 } else {
-                    notifyMusicStatusChanged(MusicStatus.LAST);
+                    notifyMusicStatusChanged(MusicChangedStatus.LAST);
                 }
                 currentItem = position;
             }
@@ -229,7 +234,7 @@ public class DiscView extends RelativeLayout {
     private void initObjectAnimator() {
         mNeedleAnimator = ObjectAnimator.ofFloat(mIvNeedle, View.ROTATION, DisplayUtil
                 .ROTATION_INIT_NEEDLE, 0);
-        mNeedleAnimator.setDuration(500);
+        mNeedleAnimator.setDuration(DURATION_NEEDLE_ANIAMTOR);
         mNeedleAnimator.setInterpolator(new AccelerateInterpolator());
         mNeedleAnimator.addListener(new Animator.AnimatorListener() {
             @Override
@@ -431,22 +436,25 @@ public class DiscView extends RelativeLayout {
         }
     }
 
-    public void notifyMusicStatusChanged(MusicStatus musicStatus) {
+    public void notifyMusicStatusChanged(MusicChangedStatus musicChangedStatus) {
         if (mIPlayInfo != null) {
-            mIPlayInfo.onPlayStatusChanged(musicStatus);
+            mIPlayInfo.onMusicChanged(musicChangedStatus);
         }
     }
 
     private void play() {
         musicStatus = MusicStatus.PLAY;
         playAnimator();
-        notifyMusicStatusChanged(musicStatus);
     }
 
     private void pause() {
         musicStatus = MusicStatus.PAUSE;
         pauseAnimator();
-        notifyMusicStatusChanged(musicStatus);
+    }
+
+    public void stop() {
+        pause();
+        notifyMusicStatusChanged(MusicChangedStatus.STOP);
     }
 
     public void playOrPause() {
@@ -455,7 +463,6 @@ public class DiscView extends RelativeLayout {
         } else {
             play();
         }
-        notifyMusicStatusChanged(musicStatus);
     }
 
     public void next() {
@@ -476,6 +483,10 @@ public class DiscView extends RelativeLayout {
             selectMusicWithButton();
             mVpContain.setCurrentItem(currentItem - 1, true);
         }
+    }
+
+    public boolean isPlaying() {
+        return musicStatus == MusicStatus.PLAY;
     }
 
     private void selectMusicWithButton() {

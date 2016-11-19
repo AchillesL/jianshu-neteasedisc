@@ -2,10 +2,11 @@
 <com.achillesl.neteasedisc.widget.BackgourndAnimationRelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/fm_run_song_bg"
+    android:background="@drawable/ic_blackground"
     android:fitsSystemWindows="true"
     >
 
@@ -30,9 +31,42 @@
         layout="@layout/layout_discview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/rlMusicTime"
+        android:layout_below="@id/toolBar"/>
+
+    <RelativeLayout
+        android:id="@+id/rlMusicTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_above="@+id/llPlayOption"
-        android:layout_below="@+id/toolBar"
-        />
+        android:layout_marginEnd="15dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            style="@style/neteasa_music_time_text_sytle"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            tools:text="01:34"/>
+
+        <SeekBar
+            android:id="@+id/musicSeekBar"
+            style="@style/neteasa_music_time_seek_bar_sytle"
+            android:layout_centerInParent="true"
+            android:layout_toEndOf="@id/tvCurrentTime"
+            android:layout_toStartOf="@+id/tvTotalTime"
+            android:paddingEnd="15dp"
+            android:paddingStart="15dp"
+            />
+
+        <TextView
+            android:id="@+id/tvTotalTime"
+            style="@style/neteasa_music_time_text_sytle"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            tools:text="05:34"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/llPlayOption"
@@ -41,7 +75,11 @@
         android:layout_alignParentBottom="true"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="20dp">
+        android:paddingBottom="20dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        >
 
         <ImageView
             android:id="@+id/ivLast"
@@ -63,4 +101,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_next"/>
     </LinearLayout>
+
+
 </com.achillesl.neteasedisc.widget.BackgourndAnimationRelativeLayout>
