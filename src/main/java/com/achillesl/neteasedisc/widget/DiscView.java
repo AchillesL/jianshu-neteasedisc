@@ -13,6 +13,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -312,11 +313,10 @@ public class DiscView extends RelativeLayout {
         int discSize = (int) (mScreenWidth * DisplayUtil.SCALE_DISC_SIZE);
         int musicPicSize = (int) (mScreenWidth * DisplayUtil.SCALE_MUSIC_PIC_SIZE);
 
-        Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources
-                (), R
+        Bitmap mBitmapDisc = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R
                 .drawable.ic_disc), discSize, discSize, false);
-        Bitmap mBitmapMusicPic = Bitmap.createScaledBitmap(BitmapFactory.decodeResource
-                (getResources(), musicPicRes), musicPicSize, musicPicSize, false);
+        Bitmap mBitmapMusicPic = getMusicPicBitmap(musicPicSize,musicPicRes);
+        Log.d("getDiscDrawable","size: " + mBitmapDisc.getByteCount());
         RoundedBitmapDrawable mRoundDiscDrawable = RoundedBitmapDrawableFactory.create
                 (getResources(), mBitmapDisc);
         RoundedBitmapDrawable mRoundMusicDrawable = RoundedBitmapDrawableFactory.create
@@ -336,6 +336,21 @@ public class DiscView extends RelativeLayout {
                 musicPicMargin);
 
         return layerDrawable;
+    }
+
+    private Bitmap getMusicPicBitmap(int musicPicSize, int musicPicRes) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+
+        BitmapFactory.decodeResource(getResources(),musicPicRes,options);
+        int imageWidth = options.outWidth;
+
+        int sample = imageWidth / musicPicSize;
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = sample;
+
+        return Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(),
+                musicPicRes, options), musicPicSize, musicPicSize, true);
     }
 
     public void setMusicDataList(List<MusicData> musicDataList) {

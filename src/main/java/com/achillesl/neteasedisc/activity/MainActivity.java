@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         final float widthHeightSize = (float) (DisplayUtil.getScreenWidth(MainActivity.this)
                 * 1.0 / DisplayUtil.getScreenHeight(this) * 1.0);
 
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), musicPicRes);
+        Bitmap bitmap = getForegroundBitmap(musicPicRes);
         int cropBitmapWidth = (int) (widthHeightSize * bitmap.getHeight());
         int cropBitmapWidthX = (int) ((bitmap.getWidth() - cropBitmapWidth) / 2.0);
 
@@ -201,6 +201,37 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
         /*加入灰色遮罩层，避免图片过亮影响其他控件*/
         foregroundDrawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
         return foregroundDrawable;
+    }
+
+    private Bitmap getForegroundBitmap(int musicPicRes) {
+        int screenWidth = DisplayUtil.getScreenWidth(this);
+        int screenHeight = DisplayUtil.getScreenHeight(this);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+
+        BitmapFactory.decodeResource(getResources(), musicPicRes, options);
+        int imageWidth = options.outWidth;
+        int imageHeight = options.outHeight;
+
+        if (imageWidth < screenWidth && imageHeight < screenHeight) {
+            return BitmapFactory.decodeResource(getResources(), musicPicRes);
+        }
+
+        int sample = 2;
+        int sampleX = imageWidth / DisplayUtil.getScreenWidth(this);
+        int sampleY = imageHeight / DisplayUtil.getScreenHeight(this);
+
+        if (sampleX > sampleY && sampleY > 1) {
+            sample = sampleX;
+        } else if (sampleY > sampleX && sampleX > 1) {
+            sample = sampleY;
+        }
+
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = sample;
+
+        return BitmapFactory.decodeResource(getResources(), musicPicRes, options);
     }
 
     @Override
