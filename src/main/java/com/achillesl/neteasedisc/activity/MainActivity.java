@@ -337,6 +337,9 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
                 mIvPlayOrPause.setImageResource(R.drawable.ic_pause);
                 int currentPosition = intent.getIntExtra(MusicService.PARAM_MUSIC_CURRENT_POSITION, 0);
                 mSeekBar.setProgress(currentPosition);
+                if(!mDisc.isPlaying()){
+                    mDisc.playOrPause();
+                }
             } else if (action.equals(MusicService.ACTION_STATUS_MUSIC_PAUSE)) {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_play);
             } else if (action.equals(MusicService.ACTION_STATUS_MUSIC_DURATION)) {

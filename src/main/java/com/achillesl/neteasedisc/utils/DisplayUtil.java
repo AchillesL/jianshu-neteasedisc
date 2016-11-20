@@ -17,11 +17,11 @@ public class DisplayUtil {
 
     /*唱针宽高、距离等比例*/
     public static final float SCALE_NEEDLE_WIDTH = (float) (276.0 / BASE_SCREEN_WIDTH);
-    public static final float SCALE_NEEDLE_MARGIN_LEFT = (float) (511.0 / BASE_SCREEN_WIDTH);
-    public static final float SCALE_NEEDLE_PIVOT_X = (float) (47.0 / BASE_SCREEN_WIDTH);
-    public static final float SCALE_NEEDLE_PIVOT_Y = (float) (47.0 / BASE_SCREEN_WIDTH);
-    public static final float SCALE_NEEDLE_HEIGHT = (float) (414.0 / BASE_SCREEN_HEIGHT);
-    public static final float SCALE_NEEDLE_MARGIN_TOP = (float) (50.0 / BASE_SCREEN_HEIGHT);
+    public static final float SCALE_NEEDLE_MARGIN_LEFT = (float) (500.0 / BASE_SCREEN_WIDTH);
+    public static final float SCALE_NEEDLE_PIVOT_X = (float) (43.0 / BASE_SCREEN_WIDTH);
+    public static final float SCALE_NEEDLE_PIVOT_Y = (float) (43.0 / BASE_SCREEN_WIDTH);
+    public static final float SCALE_NEEDLE_HEIGHT = (float) (413.0 / BASE_SCREEN_HEIGHT);
+    public static final float SCALE_NEEDLE_MARGIN_TOP = (float) (43.0 / BASE_SCREEN_HEIGHT);
 
     /*唱盘比例*/
     public static final float SCALE_DISC_SIZE = (float) (813.0 / BASE_SCREEN_WIDTH);
