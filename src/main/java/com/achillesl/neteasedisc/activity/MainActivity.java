@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -37,8 +38,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.achillesl.neteasedisc.widget.DiscView.*;
 
-public class MainActivity extends AppCompatActivity implements DiscView.IPlayInfo, View
+
+public class MainActivity extends AppCompatActivity implements IPlayInfo, View
         .OnClickListener {
 
     private DiscView mDisc;
@@ -161,11 +164,8 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     private void try2UpdateMusicPicBackground(final int musicPicRes) {
         if (mRootLayout.isNeed2UpdateBackground(musicPicRes)) {
             new Thread(new Runnable() {
-                final int DURATION_TIME = 2 * 100;
-
                 @Override
                 public void run() {
-                    SystemClock.sleep(DURATION_TIME);
                     final Drawable foregroundDrawable = getForegroundDrawable(musicPicRes);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
 
         options.inJustDecodeBounds = false;
         options.inSampleSize = sample;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
 
         return BitmapFactory.decodeResource(getResources(), musicPicRes, options);
     }
@@ -246,13 +247,28 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     @Override
-    public void onMusicChanged(DiscView.MusicChangedStatus musicChangedStatus) {
-        if (musicChangedStatus == DiscView.MusicChangedStatus.NEXT) {
-            next();
-        } else if (musicChangedStatus == DiscView.MusicChangedStatus.LAST) {
-            last();
-        } else if (musicChangedStatus == DiscView.MusicChangedStatus.STOP) {
-            stop();
+    public void onMusicChanged(MusicChangedStatus musicChangedStatus) {
+        switch (musicChangedStatus) {
+            case PLAY:{
+                play();
+                break;
+            }
+            case PAUSE:{
+                pause();
+                break;
+            }
+            case NEXT:{
+                next();
+                break;
+            }
+            case LAST:{
+                last();
+                break;
+            }
+            case STOP:{
+                stop();
+                break;
+            }
         }
     }
 
@@ -260,11 +276,6 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     public void onClick(View v) {
         if (v == mIvPlayOrPause) {
             mDisc.playOrPause();
-            if (mDisc.isPlaying()) {
-                play();
-            } else {
-                pause();
-            }
         } else if (v == mIvNext) {
             mDisc.next();
         } else if (v == mIvLast) {
@@ -273,12 +284,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
     }
 
     private void play() {
-        mRootLayout.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                optMusic(MusicService.ACTION_OPT_MUSIC_PLAY);
-            }
-        }, DiscView.DURATION_NEEDLE_ANIAMTOR);
+        optMusic(MusicService.ACTION_OPT_MUSIC_PLAY);
         startUpdateSeekBarProgress();
     }
 
@@ -301,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
             public void run() {
                 optMusic(MusicService.ACTION_OPT_MUSIC_NEXT);
             }
-        }, DiscView.DURATION_NEEDLE_ANIAMTOR);
+        }, DURATION_NEEDLE_ANIAMTOR);
         stopUpdateSeekBarProgree();
         mTvMusicDuration.setText(duration2Time(0));
         mTvTotalMusicDuration.setText(duration2Time(0));
@@ -313,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
             public void run() {
                 optMusic(MusicService.ACTION_OPT_MUSIC_LAST);
             }
-        }, DiscView.DURATION_NEEDLE_ANIAMTOR);
+        }, DURATION_NEEDLE_ANIAMTOR);
         stopUpdateSeekBarProgree();
         mTvMusicDuration.setText(duration2Time(0));
         mTvTotalMusicDuration.setText(duration2Time(0));
@@ -373,6 +379,9 @@ public class MainActivity extends AppCompatActivity implements DiscView.IPlayInf
                 }
             } else if (action.equals(MusicService.ACTION_STATUS_MUSIC_PAUSE)) {
                 mIvPlayOrPause.setImageResource(R.drawable.ic_play);
+                if (mDisc.isPlaying()) {
+                    mDisc.playOrPause();
+                }
             } else if (action.equals(MusicService.ACTION_STATUS_MUSIC_DURATION)) {
                 int duration = intent.getIntExtra(MusicService.PARAM_MUSIC_DURATION, 0);
                 updateMusicDurationInfo(duration);

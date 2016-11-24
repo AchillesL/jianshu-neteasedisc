@@ -15,7 +15,9 @@ import com.achillesl.neteasedisc.R;
 /**
  * Created by AchillesL on 2016/11/18.
  */
-
+/**
+ * 自定义一个控件，继承RelativeLayout
+ * */
 public class BackgourndAnimationRelativeLayout extends RelativeLayout {
 
     private final int DURATION_ANIMATION = 500;
@@ -75,6 +77,7 @@ public class BackgourndAnimationRelativeLayout extends RelativeLayout {
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                /*动画结束后，记得将原来的背景图及时更新*/
                 layerDrawable.setDrawable(INDEX_BACKGROUND, layerDrawable.getDrawable(
                         INDEX_FOREGROUND));
             }
@@ -95,6 +98,7 @@ public class BackgourndAnimationRelativeLayout extends RelativeLayout {
         layerDrawable.setDrawable(INDEX_FOREGROUND, drawable);
     }
 
+    //对外提供方法，用于开始渐变动画
     public void beginAnimation() {
         objectAnimator.start();
     }

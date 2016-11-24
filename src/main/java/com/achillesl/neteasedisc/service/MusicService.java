@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.achillesl.neteasedisc.activity.MainActivity;
 import com.achillesl.neteasedisc.model.MusicData;
