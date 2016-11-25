@@ -237,8 +237,8 @@ public class MainActivity extends AppCompatActivity implements IPlayInfo, View
 
     @Override
     public void onMusicInfoChanged(String musicName, String musicAuthor) {
-        mToolbar.setTitle(musicName);
-        mToolbar.setSubtitle(musicAuthor);
+        getSupportActionBar().setTitle(musicName);
+        getSupportActionBar().setSubtitle(musicAuthor);
     }
 
     @Override

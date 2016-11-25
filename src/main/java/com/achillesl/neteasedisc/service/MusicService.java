@@ -65,6 +65,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void initMusicDatas(Intent intent) {
+        if (intent == null) return;
         List<MusicData> musicDatas = (List<MusicData>) intent.getSerializableExtra(MainActivity.PARAM_MUSIC_LIST);
         mMusicDatas.addAll(musicDatas);
     }

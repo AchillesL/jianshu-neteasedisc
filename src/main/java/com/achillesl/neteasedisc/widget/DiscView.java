@@ -51,7 +51,7 @@ public class DiscView extends RelativeLayout {
 
     /*标记唱针复位后，是否需要重新偏移到唱片处*/
     private boolean mIsNeed2StartPlayAnimator = false;
-    private MusicStatus musicStatus = MusicStatus.PAUSE;
+    private MusicStatus musicStatus = MusicStatus.STOP;
 
     public static final int DURATION_NEEDLE_ANIAMTOR = 500;
     private NeedleAnimatorStatus needleAnimatorStatus = NeedleAnimatorStatus.IN_FAR_END;
@@ -60,6 +60,7 @@ public class DiscView extends RelativeLayout {
 
     private int mScreenWidth, mScreenHeight;
 
+    /*唱针当前所处的状态*/
     private enum NeedleAnimatorStatus {
         /*移动时：从唱盘往远处移动*/
         TO_FAR_END,
@@ -71,12 +72,14 @@ public class DiscView extends RelativeLayout {
         IN_NEAR_END
     }
 
+    /*音乐当前的状态：只有播放、暂停、停止三种*/
     public enum MusicStatus {
-        PLAY, PAUSE
+        PLAY, PAUSE, STOP
     }
 
+    /*DiscView需要触发的音乐切换状态：播放、暂停、上/下一首、停止*/
     public enum MusicChangedStatus {
-        PLAY,PAUSE,NEXT,LAST,STOP
+        PLAY, PAUSE, NEXT, LAST, STOP
     }
 
     public interface IPlayInfo {
@@ -261,8 +264,12 @@ public class DiscView extends RelativeLayout {
                     needleAnimatorStatus = NeedleAnimatorStatus.IN_NEAR_END;
                     int index = mVpContain.getCurrentItem();
                     playDiscAnimator(index);
+                    musicStatus = MusicStatus.PLAY;
                 } else if (needleAnimatorStatus == NeedleAnimatorStatus.TO_FAR_END) {
                     needleAnimatorStatus = NeedleAnimatorStatus.IN_FAR_END;
+                    if (musicStatus == MusicStatus.STOP) {
+                        mIsNeed2StartPlayAnimator = true;
+                    }
                 }
 
                 if (mIsNeed2StartPlayAnimator) {
@@ -432,6 +439,14 @@ public class DiscView extends RelativeLayout {
              * */
             needleAnimatorStatus = NeedleAnimatorStatus.TO_FAR_END;
         }
+        /**
+         * 动画可能执行多次，只有音乐处于停止 / 暂停状态时，才执行暂停命令
+         * */
+        if (musicStatus == MusicStatus.STOP) {
+            notifyMusicStatusChanged(MusicChangedStatus.STOP);
+        }else if (musicStatus == MusicStatus.PAUSE) {
+            notifyMusicStatusChanged(MusicChangedStatus.PAUSE);
+        }
     }
 
     /*播放唱盘动画*/
@@ -442,7 +457,12 @@ public class DiscView extends RelativeLayout {
         } else {
             objectAnimator.start();
         }
-        notifyMusicStatusChanged(MusicChangedStatus.PLAY);
+        /**
+         * 唱盘动画可能执行多次，只有不是音乐不在播放状态，在回调执行播放
+         * */
+        if (musicStatus != MusicStatus.PLAY) {
+            notifyMusicStatusChanged(MusicChangedStatus.PLAY);
+        }
     }
 
     /*暂停唱盘动画*/
@@ -450,7 +470,6 @@ public class DiscView extends RelativeLayout {
         ObjectAnimator objectAnimator = mDiscAnimators.get(index);
         objectAnimator.pause();
         mNeedleAnimator.reverse();
-        notifyMusicStatusChanged(MusicChangedStatus.PAUSE);
     }
 
     public void notifyMusicInfoChanged(int position) {
@@ -474,7 +493,6 @@ public class DiscView extends RelativeLayout {
     }
 
     private void play() {
-        musicStatus = MusicStatus.PLAY;
         playAnimator();
     }
 
@@ -484,8 +502,8 @@ public class DiscView extends RelativeLayout {
     }
 
     public void stop() {
-        pause();
-        notifyMusicStatusChanged(MusicChangedStatus.STOP);
+        musicStatus = MusicStatus.STOP;
+        pauseAnimator();
     }
 
     public void playOrPause() {
